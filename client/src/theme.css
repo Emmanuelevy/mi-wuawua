@@ -1,0 +1,286 @@
+@import "tailwindcss" source(none);
+@import "tailwindcss-safe-area";
+@source "./**/*.tsx";
+@source "./**/*.ts";
+@source "../index.html";
+
+@theme {
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+  --text-3xl: 30px;
+  --text-3xl--line-height: 36px;
+  --text-4xl: 36px;
+  --text-4xl--line-height: 40px;
+  --text-5xl: 48px;
+  --text-5xl--line-height: 52px;
+  --font-display: "Baloo 2", system-ui, sans-serif;
+  --font-body: "Nunito", system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: light dark;
+  --radius: 18px;
+}
+
+/* La página completa queda fija: el documento NUNCA se desplaza, así
+   el menú inferior no se puede mover de su sitio. Solo la lista de
+   tarjetas se desliza, dentro de su propio contenedor. Sin esto, en
+   el iPhone la página entera resultaba un poco más alta que el área
+   visible (100dvh mide la pantalla completa, no el marco de la app)
+   y al deslizar la lista la página se corría hacia arriba llevándose
+   el menú consigo, como si el menú no estuviera fijo. */
+html,
+body {
+  height: 100%;
+  overscroll-behavior: none;
+}
+body {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+[data-generated-space-root],
+.hatch-space-root {
+  height: 100%;
+}
+
+/* El contenedor que SÍ se desplazaba (corrección 2026-11-11): los
+   estilos de la plataforma ponen [data-generated-space-root] como
+   position: fixed con overflow: auto — es decir, un contenedor
+   desplazable — y a .hatch-space-root le dan un min-height MAYOR
+   que el marco visible (100dvh + --header-height + el relleno
+   inferior de la zona segura). Resultado: dentro de ese contenedor
+   siempre sobra altura por desplazar, así que cualquier arrastre
+   que no cae en la lista (un toque con arrastre sobre el menú, la
+   inercia que se encadena al llegar la lista a un extremo) corre
+   TODA la app hacia arriba, menú incluido, y deja el hueco vacío
+   abajo que se ve en la captura del dueño. Los bloqueos anteriores
+   eran sobre html/body, que no son el contenedor que se mueve.
+   Aquí se cierra ese contenedor raíz: no se desplaza nunca
+   (overflow: hidden) y su contenido mide exactamente el marco
+   (height: 100% con min-height anulado), conservando los rellenos
+   del encabezado y de la zona segura que pone la plataforma. Los
+   selectores llevan html body por delante para ganar en fuerza a
+   los estilos de la plataforma sin tocarlos. La lista sigue
+   deslizándose dentro de su propio contenedor, intacta. */
+html body [data-generated-space-root] {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html body .hatch-space-root[data-hatch-space-root] {
+  height: 100%;
+  min-height: 0;
+}
+
+/* La altura de .mw (2026-11-11, LA QUE MANDA — declarativa, sin
+   JavaScript: el dueño lo ordenó así, "si es responsive no va
+   calculado, va bien programado para que jale solo"). El menú,
+   último elemento de la columna flex, tiene que quedar fijo justo
+   encima de la barra flotante de la plataforma: sin el hueco vacío
+   de las capturas y sin empalmarse con la barra.
+   Geometría reconciliada por fin con la hoja de estilos real de la
+   plataforma (@hatch/space-sdk/styles.css) y CINCO capturas del
+   iPhone del dueño (pantalla de 874pt):
+   - La ventana real de la app mide 824pt de alto (NO 874: calibrar
+     contra 874 fue el error que dejó cortas todas las fórmulas
+     anteriores, ~50pt cada vez).
+   - .hatch-space-root trae padding-top de 115pt (--header-height)
+     y padding-bottom de 116pt: su --hatch-space-bottom-padding es
+     --bottom-padding (82pt) + env(safe-area-inset-bottom) (34pt).
+   - Esos 82pt de --bottom-padding son EXACTAMENTE la zona de la
+     barra de la plataforma: su borde superior está a 82pt del
+     borde inferior de la pantalla (medido: y=2375/2622 = 792pt).
+   - Con height:100% a secas, .mw termina a 708pt y el menú queda
+     con ~84pt de franja vacía encima de la barra (las capturas de
+     las 11:24 y 11:32). Extendiendo .mw por TODO el padding
+     (116pt) el menú cae detrás de la barra (la captura del
+     empalme). La extensión correcta es SOLO --bottom-padding:
+     .mw llega a 789pt, la pastilla del menú (con su relleno
+     inferior de 0.6rem) queda a ~779pt, ~13pt encima de la barra.
+   Por eso la altura es 100% + (--hatch-space-bottom-padding −
+   env(safe-area-inset-bottom)): por definición de la plataforma
+   ese paréntesis ES --bottom-padding, la medida que la propia
+   plataforma declara para su barra, y queda expresado con la
+   variable definida en .hatch-space-root (visible desde .mw por
+   herencia, garantizado). Sin constantes medidas a mano y sin
+   código que mida nada: si la plataforma cambia su medida, la
+   app se adapta sola. En la auditoría la variable vale la pura
+   zona segura, el paréntesis da 0 y la altura queda en el 100%
+   de siempre.
+   OJO compilador: esta regla lleva UNA SOLA declaración de
+   altura. Al poner `height: 100%` como respaldo delante del calc
+   en la misma regla, Lightning CSS reordenó la regla fusionada y
+   dejó el 100% DESPUÉS del calc en el CSS enviado (verificado en
+   los bytes compilados), anulándolo. NO volver a poner un
+   `height` para `.mw` en ningún otro bloque (el bloque de tokens
+   solo aporta `min-height: 100%`, que no puede tapar una altura
+   mayor). El cierre de la raíz de arriba se queda intacto: es lo
+   que mantiene el menú fijo y la lista deslizando dentro de su
+   contenedor flex-1. */
+html body .mw {
+  height: calc(
+    100% + var(--hatch-space-bottom-padding, 0px) -
+      env(safe-area-inset-bottom, 0px)
+  );
+  width: 100%;
+}
+
+/* Mi Wuawua theme tokens. The accent color is chosen by the user and kept
+   across claro / oscuro / sistema; only the surfaces change. */
+.mw {
+  --bg: #fff8f0;
+  --surface: #ffffff;
+  --surface-alt: #fdeedd;
+  --text: #2b2118;
+  --dim: #7a6a58;
+  --border: #f0ddc4;
+  --accent: #d92b2b;
+  --accent-soft: #fde8e8;
+  --accent-ink: #ffffff;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  min-height: 100%;
+  /* La página nunca se desplaza hacia los lados: ningún contenido puede
+     empujar el ancho más allá de la pantalla. */
+  overflow-x: clip;
+  max-width: 100%;
+}
+.mw[data-mode="oscuro"] {
+  --bg: #1d150f;
+  --surface: #2a2019;
+  --surface-alt: #38291d;
+  --text: #f7ead9;
+  --dim: #c4ab8d;
+  --border: #4a3826;
+  --accent-soft: #452222;
+}
+@media (prefers-color-scheme: dark) {
+  .mw[data-mode="sistema"] {
+    --bg: #1d150f;
+    --surface: #2a2019;
+    --surface-alt: #38291d;
+    --text: #f7ead9;
+    --dim: #c4ab8d;
+    --border: #4a3826;
+    --accent-soft: #452222;
+  }
+}
+
+/* Flip cards */
+.flip {
+  perspective: 1200px;
+  cursor: pointer;
+}
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0.1, 0.2, 1);
+}
+.flip[data-flipped="true"] .flip-inner {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.flip-back {
+  transform: rotateY(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .flip-inner {
+    transition: none;
+  }
+  .paw-burst-particle {
+    animation: none !important;
+    display: none !important;
+  }
+}
+
+/* Patitas flotantes al marcar Mi Wuawua: salen desde la patita de la
+   tarjeta y suben desvaneciéndose, del color del tema. */
+@keyframes paw-float-up {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(0deg) scale(0.45);
+    opacity: 0;
+  }
+  14% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--paw-drift, 0px), var(--paw-rise, -150px)) rotate(var(--paw-rot, 18deg)) scale(var(--paw-scale, 1));
+    opacity: 0;
+  }
+}
+.paw-burst {
+  position: absolute;
+  left: 30px;
+  bottom: 30px;
+  width: 0;
+  height: 0;
+  z-index: 30;
+  pointer-events: none;
+  overflow: visible;
+}
+.paw-burst-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: block;
+  color: var(--accent);
+  opacity: 0;
+  animation-name: paw-float-up;
+  animation-timing-function: cubic-bezier(0.17, 0.67, 0.35, 1);
+  animation-fill-mode: forwards;
+  will-change: transform, opacity;
+}
+
+/* Phone tap targets: at least 32px tall. */
+@layer base {
+  button, [role="button"], select, summary, input:not([type="checkbox"], [type="radio"]) {
+    min-height: 2rem;
+  }
+}
+
+/* Fuentes locales: Baloo 2 y Nunito viven dentro de la app (sin nube). */
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url('./assets/fonts/baloo2-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url('./assets/fonts/nunito-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Nunito';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('./assets/fonts/nunito-400-italic.woff2') format('woff2');
+}
+

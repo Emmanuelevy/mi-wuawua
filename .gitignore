@@ -1,0 +1,15 @@
+# Dependencias y build
+node_modules/
+client/dist/
+server/dist/
+.space-build/
+.space-build-cvm/
+
+# Datos locales y auditorías de la app viva (no van al repo)
+app.db
+app.db-shm
+app.db-wal
+blobs/
+audits/
+.bun-cache/
+.harness/
