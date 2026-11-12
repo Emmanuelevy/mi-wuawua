@@ -31,6 +31,7 @@ for d, s in dens.items():
 
 
 def splash(path, w, h):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
     img = Image.new('RGBA', (w, h), (255, 255, 255, 255))
     side = int(min(w, h) * 0.38)
     ic = src.resize((side, side), Image.LANCZOS)
