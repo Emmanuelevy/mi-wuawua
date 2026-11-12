@@ -63,7 +63,7 @@ jobs:
         run: |
           cd android-app/android
           export ANDROID_HOME=$ANDROID_SDK_ROOT
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $HOME/release.jks
+          echo "${{ secrets.ANDROID_KEYSTORE_B64_A }}${{ secrets.ANDROID_KEYSTORE_B64_B }}" | base64 -d > $HOME/release.jks
           ls -l $HOME/release.jks
           sha256sum $HOME/release.jks
           $HOME/gradle/gradle-8.11.1/bin/gradle bundleRelease --no-daemon \
