@@ -43,6 +43,11 @@ jobs:
           pip install -q Pillow
           python3 android-app/android/generate-icons.py
 
+      - name: Install Node dependencies
+        run: |
+          cd android-app
+          npm install
+
       - name: Install Gradle
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.11.1-bin.zip -O gradle.zip
