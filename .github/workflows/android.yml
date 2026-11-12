@@ -64,6 +64,8 @@ jobs:
           cd android-app/android
           export ANDROID_HOME=$ANDROID_SDK_ROOT
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > $HOME/release.jks
+          ls -l $HOME/release.jks
+          sha256sum $HOME/release.jks
           $HOME/gradle/gradle-8.11.1/bin/gradle bundleRelease --no-daemon \
             -Pandroid.injected.signing.store.file=$HOME/release.jks \
             -Pandroid.injected.signing.store.password="${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
